@@ -1,0 +1,264 @@
+@page "/groceries"
+@using ShoppingCart.App.Models
+@using ShoppingCart.App.Services
+@inject GroceryService GroceryService
+
+<PageTitle>Grocery List</PageTitle>
+
+<div class="container">
+    <h1>🛒 Grocery Shopping List</h1>
+
+    <div class="add-item-section">
+        <h3>Add New Item</h3>
+        <div class="input-group">
+            <input type="text" 
+                   class="form-control" 
+                   placeholder="Item name" 
+                   @bind="newItemName" 
+                   @onkeypress="HandleKeyPress" />
+            <input type="number" 
+                   class="form-control amount-input" 
+                   placeholder="Amount" 
+                   @bind="newItemAmount" 
+                   min="1" />
+            <button class="btn btn-primary" @onclick="AddItem">Add Item</button>
+        </div>
+    </div>
+
+    <div class="items-section">
+        <h3>Items Needed</h3>
+        @if (items.Count == 0)
+        {
+            <p class="text-muted">No items in your grocery list. Add some items above!</p>
+        }
+        else
+        {
+            <div class="checklist">
+                @foreach (var item in items)
+                {
+                    <div class="checklist-item @(item.Available ? "available" : "unavailable")">
+                        <div class="item-checkbox">
+                            <input type="checkbox" 
+                                   id="item-@item.Id" 
+                                   checked="@item.Available" 
+                                   @onchange="() => ToggleAvailable(item.Id)" />
+                        </div>
+                        <div class="item-details">
+                            <label for="item-@item.Id" class="item-name">
+                                @item.Name
+                            </label>
+                            <span class="item-amount">Amount: @item.Amount</span>
+                        </div>
+                        <button class="btn btn-sm btn-danger delete-btn" @onclick="() => DeleteItem(item.Id)">
+                            ❌
+                        </button>
+                    </div>
+                }
+            </div>
+        }
+    </div>
+</div>
+
+<style>
+    .container {
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 20px;
+    }
+
+    h1 {
+        color: #333;
+        margin-bottom: 30px;
+        text-align: center;
+    }
+
+    .add-item-section {
+        background: #f8f9fa;
+        padding: 20px;
+        border-radius: 8px;
+        margin-bottom: 30px;
+    }
+
+    .add-item-section h3 {
+        margin-bottom: 15px;
+        color: #495057;
+    }
+
+    .input-group {
+        display: flex;
+        gap: 10px;
+    }
+
+    .input-group input {
+        flex: 1;
+        padding: 10px;
+        border: 1px solid #ced4da;
+        border-radius: 4px;
+        font-size: 16px;
+    }
+
+    .amount-input {
+        max-width: 100px;
+    }
+
+    .input-group button {
+        padding: 10px 20px;
+        background: #007bff;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 16px;
+        white-space: nowrap;
+    }
+
+    .input-group button:hover {
+        background: #0056b3;
+    }
+
+    .items-section h3 {
+        margin-bottom: 15px;
+        color: #495057;
+    }
+
+    .checklist {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .checklist-item {
+        display: flex;
+        align-items: center;
+        padding: 15px;
+        background: white;
+        border: 2px solid #dee2e6;
+        border-radius: 8px;
+        transition: all 0.2s;
+    }
+
+    .checklist-item:hover {
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+
+    .checklist-item.unavailable {
+        border-color: #ffc107;
+        background: #fff9e6;
+    }
+
+    .checklist-item.available {
+        border-color: #28a745;
+        background: #f0f9f4;
+        opacity: 0.7;
+    }
+
+    .item-checkbox {
+        margin-right: 15px;
+    }
+
+    .item-checkbox input[type="checkbox"] {
+        width: 24px;
+        height: 24px;
+        cursor: pointer;
+    }
+
+    .item-details {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+    }
+
+    .item-name {
+        font-size: 18px;
+        font-weight: 500;
+        color: #333;
+        cursor: pointer;
+        margin: 0;
+    }
+
+    .checklist-item.available .item-name {
+        text-decoration: line-through;
+        color: #6c757d;
+    }
+
+    .item-amount {
+        font-size: 14px;
+        color: #6c757d;
+    }
+
+    .delete-btn {
+        background: transparent;
+        border: none;
+        font-size: 18px;
+        cursor: pointer;
+        padding: 5px;
+        opacity: 0.6;
+    }
+
+    .delete-btn:hover {
+        opacity: 1;
+    }
+
+    .text-muted {
+        color: #6c757d;
+        font-style: italic;
+    }
+
+    @@media (max-width: 600px) {
+        .input-group {
+            flex-direction: column;
+        }
+
+        .amount-input {
+            max-width: 100%;
+        }
+    }
+</style>
+
+@code {
+    private List<GroceryItem> items = new();
+    private string newItemName = string.Empty;
+    private int newItemAmount = 1;
+
+    protected override void OnInitialized()
+    {
+        LoadItems();
+    }
+
+    private void LoadItems()
+    {
+        items = GroceryService.GetItems();
+    }
+
+    private void AddItem()
+    {
+        if (!string.IsNullOrWhiteSpace(newItemName))
+        {
+            GroceryService.AddItem(newItemName, newItemAmount);
+            newItemName = string.Empty;
+            newItemAmount = 1;
+            LoadItems();
+        }
+    }
+
+    private void HandleKeyPress(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter")
+        {
+            AddItem();
+        }
+    }
+
+    private void ToggleAvailable(int id)
+    {
+        GroceryService.ToggleAvailable(id);
+        LoadItems();
+    }
+
+    private void DeleteItem(int id)
+    {
+        GroceryService.DeleteItem(id);
+        LoadItems();
+    }
+}
