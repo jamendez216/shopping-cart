@@ -11,5 +11,5 @@ public class GroceryItem
     public DateTime? PurchasedOn { get; set; }
 
     public bool IsDueForRestock(DateTime today) =>
-        Available && LifetimeWeeks > 0 && PurchasedOn is { } p && today >= p.AddDays(LifetimeWeeks * 7);
+        Available && LifetimeWeeks > 0 && PurchasedOn is { } p && (today - p).TotalDays >= (long)LifetimeWeeks * 7;
 }

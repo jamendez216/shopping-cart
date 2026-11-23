@@ -9,6 +9,16 @@ public class GroceryItemTests
     private static readonly DateTime Today = new(2026, 11, 22);
 
     [Theory]
+    [InlineData(1_000_000)]
+    [InlineData(int.MaxValue)]
+    public void IsDueForRestock_HugeLifetime_DoesNotOverflow(int weeks)
+    {
+        var item = new GroceryItem { Available = true, LifetimeWeeks = weeks, PurchasedOn = Today.AddDays(-7) };
+
+        Assert.False(item.IsDueForRestock(Today));
+    }
+
+    [Theory]
     [InlineData(1, 7, true)]
     [InlineData(1, 6, false)]
     [InlineData(2, 14, true)]
