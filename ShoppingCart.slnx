@@ -2,4 +2,7 @@
   <Folder Name="/src/">
     <Project Path="src/ShoppingCart.App/ShoppingCart.App.csproj" />
   </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/ShoppingCart.App.Tests/ShoppingCart.App.Tests.csproj" />
+  </Folder>
 </Solution>
